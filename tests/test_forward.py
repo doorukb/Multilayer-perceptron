@@ -3,8 +3,6 @@ import numpy as np
 import pytest
 from mlp.forward import modify_x_w, mlp_forward
 
-
-@pytest.mark.skip(reason="Enable once §1.4 modify_x_w is implemented")
 def test_modify_x_w_vector():
     """Mirrors the notebook's vector test case."""
     X = np.array([1, 2, 3, 4])
@@ -13,8 +11,6 @@ def test_modify_x_w_vector():
     X_new, W_new = modify_x_w(X, W, b)
     np.testing.assert_allclose(X_new @ W_new, X @ W + b)
 
-
-@pytest.mark.skip(reason="Enable once §1.4 modify_x_w is implemented")
 def test_modify_x_w_matrix():
     """Mirrors the notebook's matrix test case."""
     X = np.array([[1, 2, 3], [4, 5, 6]])
