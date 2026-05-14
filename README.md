@@ -1,1 +1,175 @@
+Gradient Descent MLP
+
+A multilayer perceptron trained with gradient descent, implemented entirely in NumPy with no machine learning frameworks. The project covers forward pass, backpropagation, MSE loss, and a gradient descent optimizer, all written from scratch. Analytical gradients are validated against numerical finite-difference checks. A hyperparameter search is included that follows strict train/validation/test discipline. The codebase is structured as a modular Python package with a full pytest suite.
+
+The accompanying Jupyter notebook (notebooks/) contains extended notes, derivations, and step-by-step walkthroughs of all the math and implementation decisions.
+
+
+THE PROBLEM
+
+The network learns to approximate the surface Z = X^2 - Y^2 + 1.2 + noise, where X and Y are drawn uniformly from [-1, 1] and noise is Gaussian with mean 0 and standard deviation 0.5. Inputs are 2D (X, Y) and the target is a scalar Z. Because the irreducible noise has standard deviation 0.5, the theoretical minimum MSE is around 0.25, which is treated as the practical lower bound.
+
+
+PROJECT STRUCTURE
+
+src/mlp/
+    activations.py   sigmoid forward and backward
+    forward.py       bias augmentation (modify_x_w) and mlp_forward
+    backward.py      backprop
+    loss.py          MSE loss and its gradient
+    init.py          weight matrix and MLP initialisation
+    optimizer.py     grad_descent
+    data.py          sample_points and create_train_and_test
+    tuning.py        train/val split, grad_descent_with_validation, hyperparameter_search
+    plotting.py      3D scatter and surface plotting utilities
+
+experiments/
+    01_one_vs_two_layer.py        depth comparison, learning curves
+    02_with_validation.py         adds a validation split to the learning curve
+    03_hyperparameter_search.py   grid search over architectures and learning rates
+
+tests/
+    test_activations.py
+    test_backward.py
+    test_data.py
+    test_forward.py
+    test_init.py
+    test_loss.py
+    test_optimizer.py
+    test_tuning.py
+
+
+INSTALLATION
+
+- Python 3.10 or later is required.
+
+- Clone the repository and install the dependencies:
+    git clone <repo-url>
+    cd gradient-descent-mlp
+    python -m venv .venv
+    source .venv/Scripts/activate   # Windows (Git Bash / PowerShell: .venv\Scripts\activate)
+    pip install -r requirements.txt
+
+- Dependencies (requirements.txt):
+
+    numpy>=1.24
+    matplotlib>=3.7
+    jupyter>=1.0
+    pytest>=7.4
+
+
+- Usage examples
+
+- Training a model from scratch:
+    import numpy as np
+    from mlp.data import create_train_and_test
+    from mlp.init import init_mlp
+    from mlp.optimizer import grad_descent
+    from mlp.loss import mse_loss
+    from mlp.forward import mlp_forward
+
+    np.random.seed(0)
+    train_data, test_data = create_train_and_test(train_size=100, test_size=20)
+
+    model = init_mlp([2, 10, 1])   # input dim=2, 10 hidden units, output dim=1
+    losses, model = grad_descent(train_data, model, iterations=2000, learning_rate=0.1)
+
+    x_test = test_data[:, :2]
+    y_test = test_data[:, 2:3]
+    _, pred = mlp_forward(model, x_test)
+    print(f"test MSE: {mse_loss(y_test, pred):.4f}")
+
+- Training with a validation split:
+
+    from mlp.tuning import split_train_validation, grad_descent_with_validation
+
+    train_sub, val_sub = split_train_validation(train_data, val_fraction=0.2, seed=0)
+    train_losses, val_losses, model = grad_descent_with_validation(
+        train_sub, val_sub, model, iterations=2000, learning_rate=0.1
+    )
+
+- Running the hyperparameter search:
+    cd experiments
+    python 03_hyperparameter_search.py
+
+- Running the Jupyter notebook:
+    jupyter notebook notebooks/
+
+
+Testing
+
+To run all the test from the project root, run :
+    pytest tests/ -v
+Feel free to add more tests you'd like.
+
+test_activations
+    Checks sigmoid_forward at x=0 (must return 0.5), at large positive/negative inputs, and verifies sigmoid_backward matches the numerical finite-difference derivative to within 1e-5.
+
+test_backward
+    Verifies backprop against a numerical gradient check. For each weight matrix in a [2, 4, 1] network, 5 randomly chosen entries are perturbed by epsilon=1e-5 in both directions and the central-difference estimate is compared to the analytical gradient. Tolerance is 1e-4.
+
+test_loss
+    MSE loss returns 0 when prediction equals label, returns the correct value on a known example (2/3 for unit-step errors), and the gradient matches the finite-difference gradient to within 1e-5.
+
+test_forward
+    modify_x_w is checked on a vector and a matrix input to confirm that appending a bias column and stacking b as an extra row produces the same result as X @ W + b. mlp_forward is checked for correct cache key structure (A0 through AL) and correct output shape.
+
+test_init
+    init_weight_matrix produces the right shape with mean near 1.0 and std near 0.25. init_mlp produces weight matrices whose shapes are consistent with the requested layer sizes (including the +1 bias row).
+
+test_data
+    sample_points returns shape (n, 3), the residual Z - (X^2 - Y^2 + 1.2) has mean near 0 and std near 0.5 on a large sample, and create_train_and_test returns arrays of the requested sizes.
+
+test_optimizer
+    Running 20 steps of grad_descent on the synthetic dataset with learning rate 1e-3 must reduce the loss. This catches sign errors in backprop.
+
+test_tuning
+    split_train_validation produces the correct shapes and no row appears in both splits. The split is reproducible when the same seed is used. grad_descent_with_validation returns loss lists of length iterations+1 with all finite values. hyperparameter_search returns one result dict per configuration with the expected keys and correct curve lengths.
+
+
+Experiment results
+
+Depth comparison (experiment 01, 2000 iterations, lr=0.05, architecture width=5):
+
+    1-layer  [2, 5, 1]    initial MSE: 9.6689   final MSE: 0.3838
+    2-layer  [2, 5, 5, 1]  initial MSE: 19.7019  final MSE: 0.4085
+
+Both models converge to roughly the same final training loss near the irreducible noise floor (~0.25-0.40). The additional depth does not yield a measurable improvement on this dataset at this scale, and increases the initial loss because there are more weights to initialise.
+
+Hyperparameter search (experiment 03, 4 architectures x 3 learning rates, 2000 iterations):
+
+Data split: 80 points for training, 20 for validation, 20 for test. The test set was not accessed until after the best configuration was selected.
+
+    arch                   lr     train      val        best_val
+    [2, 10, 1]             0.10   0.2432     0.3391     0.3391
+    [2, 5, 1]              0.10   0.3014     0.4128     0.4128
+    [2, 10, 10, 1]         0.10   0.3529     0.4512     0.4512
+    [2, 5, 1]              0.01   0.3814     0.4571     0.4571
+    [2, 10, 1]             0.01   0.3756     0.4646     0.4646
+    [2, 5, 5, 1]           0.10   0.3873     0.4695     0.4695
+    [2, 5, 1]              0.05   0.3634     0.4698     0.4519
+    [2, 10, 1]             0.05   0.3603     0.4715     0.4639
+    [2, 10, 10, 1]         0.05   0.3921     0.4786     0.4745
+    [2, 10, 10, 1]         0.01   0.3921     0.4787     0.4740
+    [2, 5, 5, 1]           0.05   0.3919     0.4788     0.4788
+    [2, 5, 5, 1]           0.01   0.3944     0.4831     0.4810
+
+Selected configuration (lowest validation MSE):
+    architecture:  [2, 10, 1]
+    learning rate: 0.1
+    train MSE:     0.2432
+    val MSE:       0.3391
+    test MSE:      0.2536
+
+The test MSE of 0.2536 is close to the theoretical noise floor, indicating the model learned the underlying surface well and did not overfit.
+
+
+Roadmap
+
+- Mini-batch gradient descent in addition to full-batch
+- Additional activations (ReLU, tanh)
+- L2 regularisation
+- Momentum / Adam optimiser
+- Classification variant with cross-entropy loss and softmax output
+- Extend the notebook with interactive widgets for visualising the training surface
 
