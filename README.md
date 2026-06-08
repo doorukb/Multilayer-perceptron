@@ -115,7 +115,7 @@ test_loss
     MSE loss returns 0 when prediction equals label, returns the correct value on a known example (2/3 for unit-step errors), and the gradient matches the finite-difference gradient to within 1e-5.
 
 test_forward
-    modify_x_w is checked on a vector and a matrix input to confirm that appending a bias column and stacking b as an extra row produces the same result as X @ W + b. mlp_forward is checked for correct cache key structure (A0 through AL) and correct output shape.
+    modify_x_w is checked on a vector and a matrix input to confirm that appending a bias column and stacking b as an extra row produces the same result as X @ W + b. mlp_forward uses modify_x_w internally; a single-layer test checks the affine result, and a multi-layer test checks cache key structure (A0 through AL) and output shape.
 
 test_init
     init_weight_matrix produces the right shape with mean near 1.0 and std near 0.25. init_mlp produces weight matrices whose shapes are consistent with the requested layer sizes (including the +1 bias row).
