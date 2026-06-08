@@ -118,7 +118,7 @@ test_forward
     modify_x_w is checked on a vector and a matrix input to confirm that appending a bias column and stacking b as an extra row produces the same result as X @ W + b. mlp_forward uses modify_x_w internally; a single-layer test checks the affine result, and a multi-layer test checks cache key structure (A0 through AL) and output shape.
 
 test_init
-    init_weight_matrix produces the right shape with mean near 1.0 and std near 0.25. init_mlp produces weight matrices whose shapes are consistent with the requested layer sizes (including the +1 bias row).
+    init_weight_matrix uses Xavier scaling (std = sqrt(1 / fan_in), zero-mean weights, zero bias row). init_mlp produces weight matrices whose shapes are consistent with the requested layer sizes (including the +1 bias row). Untrained hidden activations stay away from sigmoid saturation.
 
 test_data
     sample_points returns shape (n, 3), the residual Z - (X^2 - Y^2 + 1.2) has mean near 0 and std near 0.5 on a large sample, and create_train_and_test returns arrays of the requested sizes.
