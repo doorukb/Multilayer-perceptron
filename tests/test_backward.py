@@ -1,6 +1,13 @@
 import numpy as np
 import pytest
-from mlp.activations import relu_backward, relu_forward, sigmoid_backward, sigmoid_forward
+from mlp.activations import (
+    relu_backward,
+    relu_forward,
+    sigmoid_backward,
+    sigmoid_forward,
+    tanh_backward,
+    tanh_forward,
+)
 
 # test that the backprop function matches the numerical gradient for a given activation function
 def _assert_backprop_matches_numerical_gradient(activation_forward, activation_backward, *, seed: int = 42):
@@ -47,3 +54,7 @@ def test_backprop_matches_numerical_gradient_sigmoid():
 # test that the backprop function matches the numerical gradient for the relu activation function
 def test_backprop_matches_numerical_gradient_relu():
     _assert_backprop_matches_numerical_gradient(relu_forward, relu_backward)
+
+# test that the backprop function matches the numerical gradient for the tanh activation function
+def test_backprop_matches_numerical_gradient_tanh():
+    _assert_backprop_matches_numerical_gradient(tanh_forward, tanh_backward)
