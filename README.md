@@ -105,11 +105,15 @@ To run all the test from the project root, run :
     pytest tests/ -v
 Feel free to add more tests you'd like.
 
+After any change to init, forward, or backward, re-run the gradient-check tests:
+    pytest tests/test_backward.py tests/test_loss.py tests/test_activations.py -v
+The numerical gradient check is a regression test, not a one-time validation.
+
 test_activations
     Checks sigmoid_forward at x=0 (must return 0.5), at large positive/negative inputs, and verifies sigmoid_backward matches the numerical finite-difference derivative to within 1e-5.
 
 test_backward
-    Verifies backprop against a numerical gradient check. For each weight matrix in a [2, 4, 1] network, 5 randomly chosen entries are perturbed by epsilon=1e-5 in both directions and the central-difference estimate is compared to the analytical gradient. Tolerance is 1e-4.
+    Verifies backprop against a numerical gradient check (regression test — re-run after init/forward/backward changes). For each entry in every weight matrix of a [2, 4, 1] Xavier-initialized network, epsilon=1e-5 central-difference estimates are compared to analytical gradients. Tolerance is 1e-4.
 
 test_loss
     MSE loss returns 0 when prediction equals label, returns the correct value on a known example (2/3 for unit-step errors), and the gradient matches the finite-difference gradient to within 1e-5.
