@@ -155,10 +155,13 @@ test_optimizer
 test_tuning
     split_train_validation produces the correct shapes and no row appears in both splits. The split is reproducible when the same seed is used. grad_descent_with_validation returns loss lists of length epochs+1 with all finite values. hyperparameter_search returns one result dict per configuration with the expected keys and correct curve lengths.
 
+test_regularization
+    l2_penalty computes (lambda/2) * sum(W^2) over connection weights only; bias rows are excluded. Known-value, zero-lambda, and multi-layer sum tests.
+
 
 Roadmap
 
-- L2 regularisation
+- Wire L2 penalty into training (optimizer + backprop)
 - Momentum / Adam optimiser
 - Classification variant with cross-entropy loss and softmax output
 - Interactive visualisation widgets for exploring the training surface
