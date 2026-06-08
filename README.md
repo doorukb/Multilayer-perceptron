@@ -64,7 +64,6 @@ INSTALLATION
 - Dependencies (requirements.txt):
     numpy>=1.24
     matplotlib>=3.7
-    jupyter>=1.0
     pytest>=7.4
 
 - Training a model from scratch:
@@ -98,9 +97,6 @@ INSTALLATION
 - Running the hyperparameter search:
     cd experiments
     python 03_hyperparameter_search.py
-
-- Running the Jupyter notebook:
-    jupyter notebook notebooks/
 
 
 TESTING
@@ -141,5 +137,5 @@ Roadmap
 - L2 regularisation
 - Momentum / Adam optimiser
 - Classification variant with cross-entropy loss and softmax output
-- Extend the notebook with interactive widgets for visualising the training surface
+- Interactive visualisation widgets for exploring the training surface
 
