@@ -7,3 +7,10 @@ def sigmoid_forward(x: np.ndarray) -> np.ndarray:
 def sigmoid_backward(x: np.ndarray) -> np.ndarray:
     sigmoid = sigmoid_forward(x)
     return sigmoid * (1 - sigmoid)
+
+def tanh_forward(x: np.ndarray) -> np.ndarray:
+    return np.tanh(x)
+
+def tanh_backward(x: np.ndarray) -> np.ndarray:
+    t = tanh_forward(x)
+    return 1 - t * t
