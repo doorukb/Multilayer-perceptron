@@ -1,7 +1,9 @@
 from __future__ import annotations
+from collections.abc import Callable
 import numpy as np
 from mlp.activations import sigmoid_forward
 
+# modify the input and weight matrix to include the bias term
 def modify_x_w(x: np.ndarray, w: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     x = np.atleast_2d(x)
     ones_column = np.ones((x.shape[0], 1))
@@ -9,8 +11,9 @@ def modify_x_w(x: np.ndarray, w: np.ndarray, b: np.ndarray) -> tuple[np.ndarray,
     w_new = np.vstack([w, np.atleast_2d(b)])
     return x_new, w_new
 
-
-def mlp_forward(my_mlp: dict[str, np.ndarray], x: np.ndarray) -> tuple[dict[str, np.ndarray], np.ndarray]:
+# forward pass with a swappable hidden activation
+# the activation function is applied to the hidden layers only, the output layer is linear for scalar regression
+def mlp_forward(my_mlp: dict[str, np.ndarray], x: np.ndarray, activation: Callable[[np.ndarray], np.ndarray] = sigmoid_forward) -> tuple[dict[str, np.ndarray], np.ndarray]:
     x = np.atleast_2d(x)
     cache = {"A0": x}
     n_layers = len(my_mlp)
@@ -18,9 +21,13 @@ def mlp_forward(my_mlp: dict[str, np.ndarray], x: np.ndarray) -> tuple[dict[str,
 
     for l in range(n_layers):
         W = my_mlp[f"W{l}"]
-        A_aug = np.hstack([A, np.ones((A.shape[0], 1))])
-        Z = A_aug @ W
-        A = sigmoid_forward(Z) if l < n_layers - 1 else Z
+        A, W = modify_x_w(A, W[:-1, :], W[-1:, :])
+        Z = A @ W
+        if l < n_layers - 1:
+            cache[f"Z{l + 1}"] = Z
+            A = activation(Z)
+        else:
+            A = Z
         cache[f"A{l + 1}"] = A
 
     return cache, A
