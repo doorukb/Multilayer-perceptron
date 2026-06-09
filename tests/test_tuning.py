@@ -78,3 +78,23 @@ def test_hyperparameter_search_smoke():
         assert len(r["val_curve"]) == 21
         # Best val should be ≤ final val by definition.
         assert r["best_val_loss"] <= r["final_val_loss"] + 1e-12
+
+def test_grad_descent_with_validation_relu_activation():
+    from mlp.activations import relu_backward, relu_forward
+    from mlp.data import sample_points
+    from mlp.init import init_mlp
+    from mlp.tuning import split_train_validation, grad_descent_with_validation
+
+    np.random.seed(0)
+    train = sample_points(60)
+    train_sub, val_sub = split_train_validation(train, val_fraction=0.25, seed=0)
+    model = init_mlp([2, 5, 1])
+
+    epochs = 10
+    train_losses, val_losses, _ = grad_descent_with_validation(
+        train_sub, val_sub, model, epochs=epochs, learning_rate=0.05,
+        activation=relu_forward, activation_backward=relu_backward,
+    )
+    assert len(train_losses) == epochs + 1
+    assert len(val_losses) == epochs + 1
+    assert all(np.isfinite(v) for v in val_losses)

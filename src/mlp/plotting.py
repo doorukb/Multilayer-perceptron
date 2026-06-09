@@ -44,7 +44,7 @@ def plot_train_and_test(train_data: np.ndarray, test_data: np.ndarray) -> None:
 
 # plot the data and the prediction surface
 def plot_data_and_pred(my_mlp, train_points: np.ndarray, test_points: np.ndarray) -> None:
-    # rained model's prediction surface over [-1, 1]^2 
+    # Trained model's prediction surface over [-1, 1]^2 
     grid_size = 30
     xs = np.linspace(-1, 1, grid_size)
     ys = np.linspace(-1, 1, grid_size)

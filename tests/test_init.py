@@ -30,8 +30,5 @@ def test_untrained_activations_avoid_sigmoid_saturation():
 
     for key in ("A1", "A2"):
         activations = cache[key]
-        mean_abs_deviation_from_half = np.abs(np.abs(activations) - 0.5).mean()
-        assert mean_abs_deviation_from_half < 0.35, (
-            f"{key} activations are saturated at init "
-            f"(mean |sigmoid| deviation from 0.5 = {mean_abs_deviation_from_half:.3f})"
-        )
+        mean_abs_deviation_from_half = np.abs(activations - 0.5).mean()
+        assert mean_abs_deviation_from_half < 0.35, f"{key} activations are saturated at init (mean |sigmoid| deviation from 0.5 = {mean_abs_deviation_from_half:.3f})"

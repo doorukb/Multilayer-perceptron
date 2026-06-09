@@ -15,14 +15,14 @@ The network learns to approximate the surface Z = X^2 - Y^2 + 1.2 + noise, where
 RESULTS 
 Depth comparison (experiment 01, 2000 iterations, lr=0.05, architecture width=5):
 
-    1-layer  [2, 5, 1]    initial MSE: 9.6689   final MSE: 0.3838
-    2-layer  [2, 5, 5, 1]  initial MSE: 19.7019  final MSE: 0.4085
+    1-layer  [2, 5, 1]    initial MSE: 4.9805   final MSE: 0.3862
+    2-layer  [2, 5, 5, 1]  initial MSE: 4.3793  final MSE: 0.3926
 
 <img width="320" height="230" alt="depth_comparison" src="https://github.com/user-attachments/assets/951b7bec-49da-496b-b90a-556ee83de55c" /> <img width="336" height="230" alt="learning_curve" src="https://github.com/user-attachments/assets/96b43f13-b540-4b37-b352-a5b84d4f8ac1" />
 
 
 
-Both models converge to roughly the same final training loss near the irreducible noise floor (~0.25-0.40). The additional depth does not yield a measurable improvement on this dataset at this scale, and increases the initial loss because there are more weights to initialise.
+Both models start at similar initial MSE under Xavier initialization (small weights, sigmoid outputs near 0.5 rather than saturation) and converge to roughly the same final training loss near the irreducible noise floor (~0.25-0.40). The additional depth does not yield a measurable improvement on this dataset at this scale.
 
 <img width="424" height="300" alt="heat_map" src="https://github.com/user-attachments/assets/27131084-2c87-4adb-b7af-4d1693b251ae" /> <img width="361" height="300" alt="trained_predictions_vs_true_data" src="https://github.com/user-attachments/assets/4d8058c8-ff55-4c93-8266-8e1fe3858f1a" />
 
@@ -41,32 +41,47 @@ At initialization the mean sigmoid derivative sigma'(z) = sigma(1-sigma) is alre
 Run locally: `cd experiments && python 04_activation_comparison.py`
 
 
+Batch size comparison (experiment 05, 2000 epochs, lr=0.05, architecture [2, 10, 10, 1]):
+
+Same Xavier initialization, learning rate, and data for each run; only batch size changes. Metrics are full-dataset train MSE logged at each epoch boundary.
+
+    batch_size    initial MSE    final MSE
+    1 (SGD)          1.7279        0.1735
+    8                1.7279        0.1885
+    32               1.7279        0.2485
+    full             1.7279        0.3865
+
+SGD (batch=1) is noisiest but reaches the lowest final loss — many small updates per epoch explore the loss surface aggressively. Full-batch GD is smooth and deterministic but makes only one gradient step per epoch, so it converges more slowly on this budget. Mini-batch sizes land between the two extremes.
+
+Run locally: `cd experiments && python 05_batch_size_comparison.py`
+
+
 Hyperparameter search (experiment 03, 4 architectures x 3 learning rates, 2000 iterations):
 
 Data split: 80 points for training, 20 for validation, 20 for test. The test set was not accessed until after the best configuration was selected.
 
     arch                   lr     train      val        best_val
-    [2, 10, 1]             0.10   0.2432     0.3391     0.3391
-    [2, 5, 1]              0.10   0.3014     0.4128     0.4128
-    [2, 10, 10, 1]         0.10   0.3529     0.4512     0.4512
-    [2, 5, 1]              0.01   0.3814     0.4571     0.4571
-    [2, 10, 1]             0.01   0.3756     0.4646     0.4646
-    [2, 5, 5, 1]           0.10   0.3873     0.4695     0.4695
-    [2, 5, 1]              0.05   0.3634     0.4698     0.4519
-    [2, 10, 1]             0.05   0.3603     0.4715     0.4639
-    [2, 10, 10, 1]         0.05   0.3921     0.4786     0.4745
-    [2, 10, 10, 1]         0.01   0.3921     0.4787     0.4740
-    [2, 5, 5, 1]           0.05   0.3919     0.4788     0.4788
-    [2, 5, 5, 1]           0.01   0.3944     0.4831     0.4810
+    [2, 5, 1]              0.10   0.3478     0.4087     0.4087
+    [2, 10, 10, 1]         0.10   0.3682     0.4286     0.4286
+    [2, 10, 1]             0.10   0.2689     0.4294     0.4294
+    [2, 5, 1]              0.05   0.3773     0.4442     0.4442
+    [2, 5, 5, 1]           0.10   0.3762     0.4461     0.4461
+    [2, 10, 10, 1]         0.05   0.3815     0.4470     0.4470
+    [2, 10, 1]             0.01   0.3836     0.4570     0.4570
+    [2, 5, 5, 1]           0.05   0.3817     0.4571     0.4571
+    [2, 10, 1]             0.05   0.3763     0.4584     0.4556
+    [2, 10, 10, 1]         0.01   0.3874     0.4616     0.4616
+    [2, 5, 1]              0.01   0.3864     0.4723     0.4723
+    [2, 5, 5, 1]           0.01   0.3880     0.4732     0.4732
 
 Selected configuration (lowest validation MSE):
-    architecture:  [2, 10, 1]
+    architecture:  [2, 5, 1]
     learning rate: 0.1
-    train MSE:     0.2432
-    val MSE:       0.3391
-    test MSE:      0.2536
+    train MSE:     0.3478
+    val MSE:       0.4087
+    test MSE:      0.3135
 
-The test MSE of 0.2536 is close to the theoretical noise floor, indicating the model learned the underlying surface well and did not overfit.
+The test MSE of 0.3135 is close to the theoretical noise floor, indicating the model learned the underlying surface well and did not overfit.
 
 
 Regularization sweep (experiment 06, 2000 epochs, lr=0.05, architecture [2, 10, 10, 1]):
@@ -131,6 +146,10 @@ INSTALLATION
 - Comparing activations on a deep network (sigmoid vs tanh vs ReLU):
     cd experiments
     python 04_activation_comparison.py
+
+- Comparing batch sizes (SGD vs mini-batch vs full-batch):
+    cd experiments
+    python 05_batch_size_comparison.py
 
 - Running the hyperparameter search:
     cd experiments

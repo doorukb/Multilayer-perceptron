@@ -7,12 +7,12 @@ from mlp.forward import mlp_forward
 from mlp.loss import mse_loss
 
 # resolve the batch size to use for the gradient descent
-def _resolve_batch_size(batch_size: int | None, n: int) -> int:
-    # Full-batch GD is the same algorithm with batch_size=n; None selects that default.
+def resolve_batch_size(batch_size: int | None, n: int) -> int:
+    # full-batch GD is the same algorithm with batch_size=n; None selects that default.
     return n if batch_size is None else batch_size
 
 # run the gradient descent for one epoch using mini-batch gradient descent
-def _run_epoch_batches(
+def run_epoch_batches(
     my_mlp: dict[str, np.ndarray], # the model weights
     inputs: np.ndarray, # the input data
     targets: np.ndarray, # the target labels
@@ -49,14 +49,14 @@ def grad_descent(
     inputs = data[:, :2]
     targets = data[:, 2:3]
     n = data.shape[0]
-    effective_batch_size = _resolve_batch_size(batch_size, n)
+    effective_batch_size = resolve_batch_size(batch_size, n)
     rng = np.random.default_rng(seed)
 
     _, predictions = mlp_forward(my_mlp, inputs, activation=activation)
     losses = [mse_loss(targets, predictions)]
 
     for _ in range(epochs):
-        _run_epoch_batches(my_mlp, inputs, targets, n, effective_batch_size, learning_rate, rng, activation, activation_backward, lmbda=lmbda)
+        run_epoch_batches(my_mlp, inputs, targets, n, effective_batch_size, learning_rate, rng, activation, activation_backward, lmbda=lmbda)
         _, predictions = mlp_forward(my_mlp, inputs, activation=activation)
         losses.append(mse_loss(targets, predictions))
 
