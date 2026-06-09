@@ -9,13 +9,14 @@ from mlp.activations import (
     tanh_forward,
 )
 
-# test that the backprop function matches the numerical gradient for a given activation function
-def _assert_backprop_matches_numerical_gradient(
-    activation_forward : Callable[[np.ndarray], np.ndarray], # the forward pass of the activation function
-    activation_backward : Callable[[np.ndarray], np.ndarray], # the backward pass of the activation function
-    seed: int = 42,
-    lmbda: float = 0.0, # the regularization strength
-):
+# assert that the backprop function matches the numerical gradient for a given activation function
+def _assert_backprop_matches_numerical_gradient(activation_forward, activation_backward,seed: int = 42, lmbda: float = 0.0):
+    from mlp.backward import backprop
+    from mlp.forward import mlp_forward
+    from mlp.init import init_mlp
+    from mlp.loss import mse_loss
+    from mlp.regularization import l2_penalty
+
     rng = np.random.default_rng(seed)
     n, in_dim = 8, 2
     x = rng.normal(size=(n, in_dim))
@@ -47,18 +48,15 @@ def _assert_backprop_matches_numerical_gradient(
             analytical = dW[idx]
             assert np.isclose(numerical, analytical, atol=atol), f"gradient mismatch at {key}{idx}: numerical={numerical:.6f}, analytical={analytical:.6f}"
 
-# test that the backprop function matches the numerical gradient for the sigmoid activation function
+
 def test_backprop_matches_numerical_gradient_sigmoid():
     _assert_backprop_matches_numerical_gradient(sigmoid_forward, sigmoid_backward)
 
-# test that the backprop function matches the numerical gradient for the relu activation function
 def test_backprop_matches_numerical_gradient_relu():
     _assert_backprop_matches_numerical_gradient(relu_forward, relu_backward)
 
-# test that the backprop function matches the numerical gradient for the tanh activation function
 def test_backprop_matches_numerical_gradient_tanh():
     _assert_backprop_matches_numerical_gradient(tanh_forward, tanh_backward)
-
 
 def test_backprop_matches_numerical_gradient_sigmoid_with_l2():
     _assert_backprop_matches_numerical_gradient(sigmoid_forward, sigmoid_backward, lmbda=0.1)

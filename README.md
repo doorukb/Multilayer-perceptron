@@ -68,6 +68,22 @@ Selected configuration (lowest validation MSE):
 
 The test MSE of 0.2536 is close to the theoretical noise floor, indicating the model learned the underlying surface well and did not overfit.
 
+
+Regularization sweep (experiment 06, 2000 epochs, lr=0.05, architecture [2, 10, 10, 1]):
+
+Same initialization and train/val split for each lambda; reported metrics are pure MSE (L2 affects gradients only; bias rows excluded from the penalty).
+
+    lambda     final_train   final_val     best_val
+    0              0.3815      0.4470       0.4470
+    1e-4           0.3816      0.4474       0.4474
+    1e-3           0.3825      0.4511       0.4511
+    1e-2           0.3905      0.4749       0.4677
+    1e-1           0.3918      0.4784       0.4713
+
+Sweet spot (lowest best val MSE): lambda=0 at 0.4470. As lambda increases, train MSE rises monotonically while val MSE worsens — there is no pronounced U-shape here. With ~80 train points and a modest network, the model does not overfit aggressively on this noisy regression surface, so L2 has little room to help. That shallow effect is itself the takeaway: regularization matters most when capacity exceeds what the data can support.
+
+Run locally: `cd experiments && python 06_regularization_sweep.py`
+
 INSTALLATION
 
 - Python 3.10 or later is required.
@@ -161,7 +177,6 @@ test_regularization
 
 Roadmap
 
-- Wire L2 penalty into grad_descent (optimizer logging)
 - Momentum / Adam optimiser
 - Classification variant with cross-entropy loss and softmax output
 - Interactive visualisation widgets for exploring the training surface
