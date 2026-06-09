@@ -135,7 +135,7 @@ test_activations
     Checks sigmoid_forward at x=0 (must return 0.5), at large positive/negative inputs, and verifies sigmoid_backward matches the numerical finite-difference derivative to within 1e-5. tanh_forward is checked at x=0 (must return 0.0) and at saturation; tanh_backward is verified the same way. relu_forward zeros negatives; relu_backward uses grad=1 if x>0 else 0 at the x=0 kink; finite-difference check excludes x=0.
 
 test_backward
-    Verifies backprop against a numerical gradient check (regression test — re-run after init/forward/backward changes). Run for sigmoid, tanh, and ReLU hidden activations. For each entry in every weight matrix of a [2, 4, 1] Xavier-initialized network, epsilon=1e-5 central-difference estimates are compared to analytical gradients. Tolerance is 1e-4.
+    Verifies backprop against a numerical gradient check (regression test — re-run after init/forward/backward changes). Run for sigmoid, tanh, and ReLU hidden activations. For each entry in every weight matrix of a [2, 4, 1] Xavier-initialized network, epsilon=1e-5 central-difference estimates are compared to analytical gradients. Tolerance is 1e-4. A sigmoid run with lmbda>0 checks total loss MSE + l2_penalty end-to-end.
 
 test_loss
     MSE loss returns 0 when prediction equals label, returns the correct value on a known example (2/3 for unit-step errors), and the gradient matches the finite-difference gradient to within 1e-5.
@@ -156,12 +156,12 @@ test_tuning
     split_train_validation produces the correct shapes and no row appears in both splits. The split is reproducible when the same seed is used. grad_descent_with_validation returns loss lists of length epochs+1 with all finite values. hyperparameter_search returns one result dict per configuration with the expected keys and correct curve lengths.
 
 test_regularization
-    l2_penalty computes (lambda/2) * sum(W^2) over connection weights only; bias rows are excluded. Known-value, zero-lambda, and multi-layer sum tests.
+    l2_penalty computes (lambda/2) * sum(W^2) over connection weights only; bias rows are excluded. Known-value, zero-lambda, and multi-layer sum tests. Gradient-diff test: backprop(lmbda>0) minus backprop(lmbda=0) equals lmbda*W[:-1,:] with zero bias-row delta.
 
 
 Roadmap
 
-- Wire L2 penalty into training (optimizer + backprop)
+- Wire L2 penalty into grad_descent (optimizer logging)
 - Momentum / Adam optimiser
 - Classification variant with cross-entropy loss and softmax output
 - Interactive visualisation widgets for exploring the training surface

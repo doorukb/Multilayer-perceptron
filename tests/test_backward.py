@@ -10,12 +10,12 @@ from mlp.activations import (
 )
 
 # test that the backprop function matches the numerical gradient for a given activation function
-def _assert_backprop_matches_numerical_gradient(activation_forward, activation_backward, *, seed: int = 42):
-    from mlp.backward import backprop
-    from mlp.forward import mlp_forward
-    from mlp.init import init_mlp
-    from mlp.loss import mse_loss
-
+def _assert_backprop_matches_numerical_gradient(
+    activation_forward : Callable[[np.ndarray], np.ndarray], # the forward pass of the activation function
+    activation_backward : Callable[[np.ndarray], np.ndarray], # the backward pass of the activation function
+    seed: int = 42,
+    lmbda: float = 0.0, # the regularization strength
+):
     rng = np.random.default_rng(seed)
     n, in_dim = 8, 2
     x = rng.normal(size=(n, in_dim))
@@ -24,7 +24,7 @@ def _assert_backprop_matches_numerical_gradient(activation_forward, activation_b
     np.random.seed(seed)
     model = init_mlp([in_dim, 4, 1])
     cache, pred = mlp_forward(model, x, activation=activation_forward)
-    grads = backprop(model, cache, y, pred, activation_backward=activation_backward)
+    grads = backprop(model, cache, y, pred, activation_backward=activation_backward, lmbda=lmbda)
 
     eps = 1e-5
     atol = 1e-4
@@ -35,11 +35,11 @@ def _assert_backprop_matches_numerical_gradient(activation_forward, activation_b
         for idx in np.ndindex(W.shape):
             W[idx] += eps
             _, p_hi = mlp_forward(model, x, activation=activation_forward)
-            loss_hi = mse_loss(y, p_hi)
+            loss_hi = mse_loss(y, p_hi) + l2_penalty(model, lmbda)
 
             W[idx] -= 2 * eps
             _, p_lo = mlp_forward(model, x, activation=activation_forward)
-            loss_lo = mse_loss(y, p_lo)
+            loss_lo = mse_loss(y, p_lo) + l2_penalty(model, lmbda)
 
             W[idx] += eps  # restore
 
@@ -58,3 +58,7 @@ def test_backprop_matches_numerical_gradient_relu():
 # test that the backprop function matches the numerical gradient for the tanh activation function
 def test_backprop_matches_numerical_gradient_tanh():
     _assert_backprop_matches_numerical_gradient(tanh_forward, tanh_backward)
+
+
+def test_backprop_matches_numerical_gradient_sigmoid_with_l2():
+    _assert_backprop_matches_numerical_gradient(sigmoid_forward, sigmoid_backward, lmbda=0.1)
