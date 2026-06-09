@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy as np
 
-# sample points from the unit circle
+# sample points from [-1, 1]^2
 def sample_points(n: int) -> np.ndarray:
     x = np.random.uniform(-1, 1, size=n)
     y = np.random.uniform(-1, 1, size=n)

@@ -25,8 +25,8 @@ def main() -> None:
     model_2 = init_mlp(ARCH_2)
     losses_2, model_2 = grad_descent(train_data, model_2, EPOCHS, LEARNING_RATE)
 
-    print(f"1-layer {ARCH_1} final train MSE: {losses_1[-1]:.4f}")
-    print(f"2-layer {ARCH_2} final train MSE: {losses_2[-1]:.4f}")
+    print(f"1-layer {ARCH_1} initial MSE: {losses_1[0]:.4f}   final train MSE: {losses_1[-1]:.4f}")
+    print(f"2-layer {ARCH_2} initial MSE: {losses_2[0]:.4f}   final train MSE: {losses_2[-1]:.4f}")
 
     plt.figure(figsize=(8, 5))
     plt.plot(losses_1, label=f"1 hidden layer {ARCH_1}", color="C0")

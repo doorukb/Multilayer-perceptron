@@ -1,10 +1,11 @@
 from __future__ import annotations
+from collections.abc import Callable
 import numpy as np
 from mlp.activations import sigmoid_backward, sigmoid_forward
 from mlp.forward import mlp_forward
 from mlp.init import init_mlp
 from mlp.loss import mse_loss
-from mlp.optimizer import _resolve_batch_size, _run_epoch_batches
+from mlp.optimizer import resolve_batch_size, run_epoch_batches
 
 # split the train data into train and validation sets
 def split_train_validation(train_data: np.ndarray, val_fraction: float = 0.2, seed: int | None = None) -> tuple[np.ndarray, np.ndarray]:
@@ -24,22 +25,24 @@ def grad_descent_with_validation(
     batch_size: int | None = None, # the batch size
     seed: int | None = None,
     lmbda: float = 0.0,
+    activation: Callable[[np.ndarray], np.ndarray] = sigmoid_forward, # the activation function
+    activation_backward: Callable[[np.ndarray], np.ndarray] = sigmoid_backward, # the backward pass of the activation function
 ) -> tuple[list[float], list[float], dict[str, np.ndarray]]:
     x_tr, y_tr = train_data[:, :2], train_data[:, 2:3]
     x_va, y_va = val_data[:, :2], val_data[:, 2:3]
     n = train_data.shape[0]
-    effective_batch_size = _resolve_batch_size(batch_size, n)
+    effective_batch_size = resolve_batch_size(batch_size, n)
     rng = np.random.default_rng(seed)
 
-    _, p_tr = mlp_forward(my_mlp, x_tr)
-    _, p_va = mlp_forward(my_mlp, x_va)
+    _, p_tr = mlp_forward(my_mlp, x_tr, activation=activation)
+    _, p_va = mlp_forward(my_mlp, x_va, activation=activation)
     train_losses = [mse_loss(y_tr, p_tr)]
     val_losses = [mse_loss(y_va, p_va)]
 
     for _ in range(epochs):
-        _run_epoch_batches(my_mlp, x_tr, y_tr, n, effective_batch_size, learning_rate, rng, sigmoid_forward, sigmoid_backward, lmbda=lmbda)
-        _, p_tr = mlp_forward(my_mlp, x_tr)
-        _, p_va = mlp_forward(my_mlp, x_va)
+        run_epoch_batches(my_mlp, x_tr, y_tr, n, effective_batch_size, learning_rate, rng, activation, activation_backward, lmbda=lmbda)
+        _, p_tr = mlp_forward(my_mlp, x_tr, activation=activation)
+        _, p_va = mlp_forward(my_mlp, x_va, activation=activation)
         train_losses.append(mse_loss(y_tr, p_tr))
         val_losses.append(mse_loss(y_va, p_va))
     return train_losses, val_losses, my_mlp
